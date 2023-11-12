@@ -42,16 +42,17 @@ class Lector:
     self.serial.reset_output_buffer()
   
   def hayDatos(self):
-    return True
     if self.serial == False or not self.serial.is_open:
       return False
     
     return self.serial.in_waiting > 0
 
   def leer(self):
-    testData = '{ "vin":17.45, "vmed":12.45, "vout":4.2, "cin":0.57, "cout":2.14, "d1":0.24, "d2":0.64 }'
-    j =  json.loads(testData)
-    return j
+    testData = '{ "vin":1745, "vmed":1245, "vout":420, "cin":57, "cout":214, "d1":24, "d2":64 }'
+    #j =  json.loads(testData)
+    #for k in j.keys():
+    #    j[k] /= 100.0
+    #return j
 
     if self.serial != False and not self.serial.is_open:
       return False
@@ -65,6 +66,9 @@ class Lector:
     
     try:
       j =  json.loads(data)
+      # Convierto todos los campos de int a float usando los ultimos dos digitos como decimales
+      for k in j.keys():
+        j[k] /= 100.0
       return j
     except:
       print("Error al leer el puerto")
