@@ -38,10 +38,12 @@ x_vec = np.linspace(0,1,size+1)[0:-1]
 duty_buck1 = np.zeros(len(x_vec))
 duty_buck2 = np.zeros(len(x_vec))
 tension_in = np.zeros(len(x_vec))
-tension_med = np.zeros(len(x_vec))
+#tension_med = np.zeros(len(x_vec))
 tension_out = np.zeros(len(x_vec))
 potencia_panel = np.zeros(len(x_vec))
 potencia_salida = np.zeros(len(x_vec))
+corriente_entrada = np.zeros(len(x_vec))
+corriente_salida = np.zeros(len(x_vec))
 
 # Configuro el plot
 plt.ion()
@@ -51,25 +53,36 @@ fig.canvas.manager.set_window_title('MPPT - Electronica de Potencia - UTN FRBA')
 plt.suptitle('Datos de MPPT')
 
 # Agrego un subplot para los dutys
-axis_duty = fig.add_subplot(311)                        
+axis_duty = fig.add_subplot(411)                        
 line_duty_buck1, = axis_duty.plot(x_vec, duty_buck1, "r", label="Duty Buck 1")
 line_duty_buck2, = axis_duty.plot(x_vec, duty_buck2, "b", label="Duty Buck 2")
-axis_duty.set_ylim([0,1])
+axis_duty.set_ylim([0,100])
+axis_duty.set_ylabel("Duty [%]")
 plt.grid()
 plt.legend(loc='upper right')
 
 # Agrego un subplot para las tensiones
-axis_tension = fig.add_subplot(312)                        
+axis_tension = fig.add_subplot(412)                        
 line_tension_in, = axis_tension.plot(x_vec, tension_in, "r", label="Tension Entrada")
-line_tension_med, = axis_tension.plot(x_vec, tension_med, "g", label="Tension Intermedia")
+#line_tension_med, = axis_tension.plot(x_vec, tension_med, "g", label="Tension Intermedia")
 line_tension_out, = axis_tension.plot(x_vec, tension_out, "b", label="Tension Salida")
+axis_tension.set_ylabel("Tension [V]")
 plt.grid()
 plt.legend(loc='upper right')
 
 # Agrego un subplot para las potencias
-axis_potencia = fig.add_subplot(313)                        
+axis_corriente = fig.add_subplot(413)                        
+line_corriente_entrada, = axis_corriente.plot(x_vec, corriente_entrada, "r", label="Corriente Entrada")
+line_corriente_salida, = axis_corriente.plot(x_vec, corriente_salida, "b", label="Corriente Salida")
+axis_corriente.set_ylabel("Corriente [mA]")
+plt.grid()
+plt.legend(loc='upper right')
+
+# Agrego un subplot para las potencias
+axis_potencia = fig.add_subplot(414)                        
 line_potencia_panel, = axis_potencia.plot(x_vec, potencia_panel, "r", label="Potencia Panel")
 line_potencia_salida, = axis_potencia.plot(x_vec, potencia_salida, "b", label="Potencia Salida")
+axis_potencia.set_ylabel("Potencia [W]")
 plt.grid()
 plt.legend(loc='upper right')
 
@@ -85,13 +98,17 @@ while plot_close_event==0:
        continue
     
     # Agrego los datos a los buffers
-    duty_buck1 = np.append(duty_buck1[1:], data["d1"])
-    duty_buck2 = np.append(duty_buck2[1:], data["d2"])
+    duty_buck1 = np.append(duty_buck1[1:], data["d1"]*100)
+    duty_buck2 = np.append(duty_buck2[1:], data["d2"]*100)
 
     # Agrego los datos a los buffers
     tension_in = np.append(tension_in[1:], data["vin"])
-    tension_med = np.append(tension_med[1:], data["vmed"])
+    #tension_med = np.append(tension_med[1:], data["vmed"])
     tension_out = np.append(tension_out[1:], data["vout"])
+
+    # Agrego los datos a los buffers
+    corriente_entrada = np.append(corriente_entrada[1:], data["cin"]*1000)
+    corriente_salida = np.append(corriente_salida[1:], data["cout"]*1000)
 
     # Agrego los datos a los buffers
     potencia_panel = np.append(potencia_panel[1:], data["vin"]*data["cin"])
@@ -102,15 +119,25 @@ while plot_close_event==0:
     line_duty_buck2.set_ydata(duty_buck2)
 
     line_tension_in.set_ydata(tension_in)
-    line_tension_med.set_ydata(tension_med)
+    #line_tension_med.set_ydata(tension_med)
     line_tension_out.set_ydata(tension_out)
+
+    line_corriente_entrada.set_ydata(corriente_entrada)
+    line_corriente_salida.set_ydata(corriente_salida)
 
     line_potencia_panel.set_ydata(potencia_panel)
     line_potencia_salida.set_ydata(potencia_salida)
 
     # Actualizo los limites en el grafico
-    minimo = np.min([tension_in, tension_med, tension_out])
-    maximo = np.max([tension_in, tension_med, tension_out])
+    #minimo = np.min([tension_in, tension_med, tension_out])
+    #maximo = np.max([tension_in, tension_med, tension_out])
+    minimo = np.min([corriente_entrada, corriente_salida])
+    maximo = np.max([corriente_entrada, corriente_salida])
+    if maximo>=line_corriente_entrada.axes.get_ylim()[1] or maximo<line_corriente_entrada.axes.get_ylim()[1]-200:
+      axis_corriente.set_ylim([0,maximo+250])
+    
+    minimo = np.min([tension_in, tension_out])
+    maximo = np.max([tension_in, tension_out])
     if maximo>=line_tension_in.axes.get_ylim()[1] or maximo<line_tension_in.axes.get_ylim()[1]-2:
       axis_tension.set_ylim([0,maximo+1])
 
